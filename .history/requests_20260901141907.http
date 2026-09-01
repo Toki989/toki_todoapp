@@ -37,36 +37,3 @@ GET http://localhost:8080/api/holidays
 
 ###7
 GET http://localhost:8080/api/todos?from=2026-09-01&to=2026-09-30
-
-###
-POST http://localhost:8080/api/todos
-Content-Type: application/json
-
-{
-  "title": "履歴書を完成させる",
-  "category": "就職活動",
-  "priority": 1,
-  "dueDate": "2026-04-04"
-}
-
-###
-POST http://localhost:8080/api/todos
-Content-Type: application/json
-
-{
-  "title": "応募企業を3社調べる",
-  "category": "就職活動",
-  "priority": 2,
-  "dueDate": "2026-04-04"
-}
-
-###
-POST http://localhost:8080/api/todos
-Content-Type: application/json
-
-{
-  "title": "面接の受け答えを練習する",
-  "category": "就職活動",
-  "priority": 3,
-  "dueDate": "2026-04-04"
-}

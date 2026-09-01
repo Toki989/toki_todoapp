@@ -47,57 +47,62 @@
     </div>
 
     <script>
-        const calendar = document.querySelector('.calendar-table');
-        const calendarStatus = document.querySelector('.calendar-status');
-        const holidayUrl = `/api/holidays?from=${calendar.dataset.from}&to=${calendar.dataset.to}`;
-
-        fetch(holidayUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('祝日を取得できませんでした');
-                }
-                if (response.headers.get('X-Holidays-Unavailable') === 'true') {
-                    calendarStatus.textContent = '祝日を取得できませんでした。';
-                }
-                return response.json();
-            })
-            .then(holidays => {
-                Object.entries(holidays).forEach(([date, name]) => {
-                    const cell = calendar.querySelector(`[data-date="${date}"]`);
-                    if (cell === null) {
-                        return;
-                    }
-
-                    cell.classList.add('calendar-holiday');
-                    const holidayName = document.createElement('span');
-                    holidayName.className = 'holiday-name';
-                    holidayName.textContent = name;
-                    cell.appendChild(holidayName);
-                });
-            })
-            .catch(() => {
-                calendarStatus.textContent = '祝日を取得できませんでした。';
-            });
-    </script>
-    <script>
         async function showTodosOnCalendar() {
             const todoCalendar = document.querySelector('.calendar-table');
             const from = todoCalendar.dataset.from;
             const to = todoCalendar.dataset.to;
-            const res = await fetch(`/api/todos?from=${from}&to=${to}`);
-            const todos = await res.json();
+            const [todoResponse, holidayResponse] = await Promise.all([
+                fetch(`/api/todos?from=${from}&to=${to}`),
+                fetch(`/api/holidays?from=${from}&to=${to}`)
+            ]);
+            const todos = await todoResponse.json();
+            const holidays = await holidayResponse.json();
+            const now = new Date();
+            const today = [
+                now.getFullYear(),
+                String(now.getMonth() + 1).padStart(2, '0'),
+                String(now.getDate()).padStart(2, '0')
+            ].join('-');
 
             const datedCells = todoCalendar.querySelectorAll('[data-date]');
             datedCells.forEach(cell => {
                 const date = cell.dataset.date;
-                todos
-                    .filter(todo => todo.dueDate === date)
+                const dayOfWeek = new Date(`${date}T00:00:00`).getDay();
+
+                if (dayOfWeek === 6) {
+                    cell.style.backgroundColor = '#eaf4ff';
+                } else if (dayOfWeek === 0) {
+                    cell.style.backgroundColor = '#ffecec';
+                }
+
+                if (holidays[date] !== undefined) {
+                    cell.style.backgroundColor = '#fff4cc';
+                    cell.title = holidays[date];
+                }
+
+                const todosForDate = todos.filter(todo => todo.dueDate === date);
+                todosForDate
+                    .slice(0, 3)
                     .forEach(todo => {
                         const todoName = document.createElement('div');
                         todoName.textContent = todo.title;
+                        todoName.style.color = '#334155';
+                        if (todo.dueDate < today && todo.completed !== true) {
+                            todoName.style.color = 'red';
+                        }
                         cell.appendChild(todoName);
                     });
+
+                if (todosForDate.length > 3) {
+                    const remainingCount = document.createElement('div');
+                    remainingCount.textContent = `ほか ${todosForDate.length - 3}件`;
+                    cell.appendChild(remainingCount);
+                }
             });
+
+            if (holidayResponse.headers.has('X-Holidays-Unavailable')) {
+                document.querySelector('.calendar-status').textContent = '祝日を取れませんでした';
+            }
         }
 
         showTodosOnCalendar();
