@@ -22,6 +22,12 @@
             <if test="category != null and category != ''">
                 AND category = #{category}
             </if>
+            <if test="from != null">
+                AND due_date &gt;= #{from}
+            </if>
+            <if test="to != null">
+                AND due_date &lt;= #{to}
+            </if>
         </where>
         ORDER BY due_date IS NULL ASC,
         <choose>
@@ -49,19 +55,22 @@
         WHERE id = #{id}
     </select>
 
-    <insert id="insert" parameterType="com.example.todoapp.Todo">
+    <insert id="insert" parameterType="com.example.todoapp.Todo"
+            useGeneratedKeys="true" keyProperty="id">
         INSERT INTO todos (
             title,
             detail,
             category,
             priority,
-            due_date
+            due_date,
+            completed
         ) VALUES (
             #{title},
             #{detail},
             #{category},
             #{priority},
-            #{dueDate}
+            #{dueDate},
+            COALESCE(#{completed}, false)
         )
     </insert>
 

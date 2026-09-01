@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カレンダー</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="page-title">カレンダー</h1>
+
+        <nav class="calendar-navigation" aria-label="月の移動">
+            <a class="link" th:href="@{/calendar(year=${previousMonth.year},month=${previousMonth.monthValue})}">前の月</a>
+            <h2 class="calendar-heading" th:text="|${year}年${month}月|">2026年4月</h2>
+            <a class="link" th:href="@{/calendar(year=${nextMonth.year},month=${nextMonth.monthValue})}">次の月</a>
+        </nav>
+
+        <p class="calendar-legend"><span class="holiday-swatch" aria-hidden="true"></span>祝日</p>
+        <p class="calendar-status" aria-live="polite"></p>
+
+        <div class="calendar-frame">
+            <table class="calendar-table" th:attr="data-from=${firstDay},data-to=${lastDay}">
+                <thead>
+                    <tr>
+                        <th scope="col">日</th>
+                        <th scope="col">月</th>
+                        <th scope="col">火</th>
+                        <th scope="col">水</th>
+                        <th scope="col">木</th>
+                        <th scope="col">金</th>
+                        <th scope="col">土</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="week : ${weeks}">
+                        <th:block th:each="date : ${week}">
+                            <td th:if="${date != null}" th:attr="data-date=${date}">
+                                <span class="calendar-day" th:text="${date.dayOfMonth}"></span>
+                            </td>
+                            <td class="calendar-empty" th:unless="${date != null}"></td>
+                        </th:block>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const calendar = document.querySelector('.calendar-table');
+        const calendarStatus = document.querySelector('.calendar-status');
+        const holidayUrl = `/api/holidays?from=${calendar.dataset.from}&to=${calendar.dataset.to}`;
+
+        fetch(holidayUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('祝日を取得できませんでした');
+                }
+                if (response.headers.get('X-Holidays-Unavailable') === 'true') {
+                    calendarStatus.textContent = '祝日を取得できませんでした。';
+                }
+                return response.json();
+            })
+            .then(holidays => {
+                Object.entries(holidays).forEach(([date, name]) => {
+                    const cell = calendar.querySelector(`[data-date="${date}"]`);
+                    if (cell === null) {
+                        return;
+                    }
+
+                    cell.classList.add('calendar-holiday');
+                    const holidayName = document.createElement('span');
+                    holidayName.className = 'holiday-name';
+                    holidayName.textContent = name;
+                    cell.appendChild(holidayName);
+                });
+            })
+            .catch(() => {
+                calendarStatus.textContent = '祝日を取得できませんでした。';
+            });
+    </script>
+    <script>
+        async function showTodosOnCalendar() {
+            const todoCalendar = document.querySelector('.calendar-table');
+            const from = todoCalendar.dataset.from;
+            const to = todoCalendar.dataset.to;
+            const res = await fetch(`/api/todos?from=${from}&to=${to}`);
+            const todos = await res.json();
+
+            const datedCells = todoCalendar.querySelectorAll('[data-date]');
+            datedCells.forEach(cell => {
+                const date = cell.dataset.date;
+                todos
+                    .filter(todo => todo.dueDate === date)
+                    .forEach(todo => {
+                        const todoName = document.createElement('div');
+                        todoName.textContent = todo.title;
+                        cell.appendChild(todoName);
+                    });
+            });
+        }
+
+        showTodosOnCalendar();
+    </script>
+</body>
+</html>
