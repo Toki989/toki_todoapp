@@ -1,5 +1,7 @@
 package com.example.todoapp;
 
+import java.time.LocalDate;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -36,6 +38,7 @@ public class HomeController {
         }
 
         model.addAttribute("todos", todoService.search(keyword, category, order));
+        model.addAttribute("today", LocalDate.now());
         model.addAttribute("keyword", keyword);
         model.addAttribute("category", category);
         model.addAttribute("order", order);
