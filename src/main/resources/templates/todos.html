@@ -30,10 +30,15 @@
                     <option value="就職活動" th:selected="${category == '就職活動'}">就職活動</option>
                 </select>
             </label>
+            <label>
+                <input type="checkbox" name="showCompleted" value="true"
+                       th:checked="${showCompleted}">
+                完了したものも表示する
+            </label>
             <input type="hidden" name="order" th:value="${order}">
             <button class="btn" type="submit">絞り込む</button>
-            <a class="link" th:href="@{/todos(keyword=${keyword},category=${category},order='asc')}">期限が近い順</a>
-            <a class="link" th:href="@{/todos(keyword=${keyword},category=${category},order='desc')}">期限が遠い順</a>
+            <a class="link" th:href="@{/todos(keyword=${keyword},category=${category},order='asc',showCompleted=${showCompleted},page=${currentPage})}">期限が近い順</a>
+            <a class="link" th:href="@{/todos(keyword=${keyword},category=${category},order='desc',showCompleted=${showCompleted},page=${currentPage})}">期限が遠い順</a>
         </form>
 
         <table class="todo-table" th:if="${!#lists.isEmpty(todos)}">
@@ -57,11 +62,20 @@
                         <span th:text="${todo.priority == 1 ? '高' : (todo.priority == 2 ? '中' : '低')}"></span>
                     </td>
                     <td th:text="${todo.dueDate}"></td>
-                    <td th:text="${todo.completed ? '完了' : '未完了'}"></td>
+                    <td th:text="${todo.completed ? '完了（' + #temporals.format(todo.completedAt, 'yyyy-MM-dd') + '）' : '未完了'}"></td>
                     <td><a class="link" th:href="@{/todos/{id}/edit(id=${todo.id})}">編集</a> <a class="link" th:href="@{/todos/{id}/delete(id=${todo.id})}">削除</a></td>
                 </tr>
             </tbody>
         </table>
+
+        <nav class="pagination" th:if="${totalPages > 1}" aria-label="ページ移動">
+            <a class="page-number"
+               th:each="pageNumber : ${#numbers.sequence(1, totalPages)}"
+               th:classappend="${pageNumber == currentPage} ? 'current'"
+               th:href="@{/todos(keyword=${keyword},category=${category},order=${order},showCompleted=${showCompleted},page=${pageNumber})}"
+               th:text="${pageNumber}"
+               th:attr="aria-current=${pageNumber == currentPage ? 'page' : null}"></a>
+        </nav>
 
         <p th:if="${#lists.isEmpty(todos)}">まだ1件も登録されていません</p>
     </div>

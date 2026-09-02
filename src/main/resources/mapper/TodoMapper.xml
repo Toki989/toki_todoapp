@@ -3,6 +3,18 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.todoapp.TodoMapper">
+    <sql id="listConditions">
+        <if test="showCompleted == false">
+            completed = false
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="category != null and category != ''">
+            AND category = #{category}
+        </if>
+    </sql>
+
     <select id="search" resultType="com.example.todoapp.Todo">
         SELECT
             id,
@@ -12,16 +24,12 @@
             priority,
             due_date,
             completed,
+            completed_at,
             created_at,
             updated_at
         FROM todos
         <where>
-            <if test="keyword != null and keyword != ''">
-                title LIKE CONCAT('%', #{keyword}, '%')
-            </if>
-            <if test="category != null and category != ''">
-                AND category = #{category}
-            </if>
+            <include refid="listConditions" />
             <if test="from != null">
                 AND due_date &gt;= #{from}
             </if>
@@ -40,6 +48,43 @@
         </choose>
     </select>
 
+    <select id="searchPage" resultType="com.example.todoapp.Todo">
+        SELECT
+            id,
+            title,
+            detail,
+            category,
+            priority,
+            due_date,
+            completed,
+            completed_at,
+            created_at,
+            updated_at
+        FROM todos
+        <where>
+            <include refid="listConditions" />
+        </where>
+        ORDER BY due_date IS NULL ASC,
+        <choose>
+            <when test="order == 'desc'">
+                due_date DESC
+            </when>
+            <otherwise>
+                due_date ASC
+            </otherwise>
+        </choose>,
+        id ASC
+        LIMIT 10 OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*)
+        FROM todos
+        <where>
+            <include refid="listConditions" />
+        </where>
+    </select>
+
     <select id="findById" resultType="com.example.todoapp.Todo">
         SELECT
             id,
@@ -49,6 +94,7 @@
             priority,
             due_date,
             completed,
+            completed_at,
             created_at,
             updated_at
         FROM todos
@@ -82,7 +128,14 @@
             category = #{category},
             priority = #{priority},
             due_date = #{dueDate},
-            completed = #{completed}
+            completed_at = CASE
+                WHEN completed = false AND COALESCE(#{completed}, false) = true
+                    THEN CURRENT_TIMESTAMP
+                WHEN completed = true AND COALESCE(#{completed}, false) = false
+                    THEN NULL
+                ELSE completed_at
+            END,
+            completed = COALESCE(#{completed}, false)
         WHERE id = #{id}
     </update>
 
