@@ -20,11 +20,13 @@ public interface TodoMapper {
             @Param("category") String category,
             @Param("order") String order,
             @Param("showCompleted") boolean showCompleted,
+            @Param("trash") boolean trash,
             @Param("offset") int offset);
 
     int count(@Param("keyword") String keyword,
             @Param("category") String category,
-            @Param("showCompleted") boolean showCompleted);
+            @Param("showCompleted") boolean showCompleted,
+            @Param("trash") boolean trash);
 
     Todo findById(Long id);
 
@@ -32,5 +34,7 @@ public interface TodoMapper {
 
     void update(Todo todo);
 
-    void deleteById(Long id);
+    void markDeleted(Long id);
+
+    void restore(Long id);
 }

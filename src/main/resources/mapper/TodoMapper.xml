@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.todoapp.TodoMapper">
-    <sql id="listConditions">
+    <sql id="filterConditions">
         <if test="showCompleted == false">
-            completed = false
+            AND completed = false
         </if>
         <if test="keyword != null and keyword != ''">
             AND title LIKE CONCAT('%', #{keyword}, '%')
@@ -25,18 +25,18 @@
             due_date,
             completed,
             completed_at,
+            deleted_at,
             created_at,
             updated_at
         FROM todos
-        <where>
-            <include refid="listConditions" />
+        WHERE deleted_at IS NULL
+            <include refid="filterConditions" />
             <if test="from != null">
                 AND due_date &gt;= #{from}
             </if>
             <if test="to != null">
                 AND due_date &lt;= #{to}
             </if>
-        </where>
         ORDER BY due_date IS NULL ASC,
         <choose>
             <when test="order == 'desc'">
@@ -58,12 +58,20 @@
             due_date,
             completed,
             completed_at,
+            deleted_at,
             created_at,
             updated_at
         FROM todos
-        <where>
-            <include refid="listConditions" />
-        </where>
+        WHERE
+        <choose>
+            <when test="trash">
+                deleted_at IS NOT NULL
+            </when>
+            <otherwise>
+                deleted_at IS NULL
+            </otherwise>
+        </choose>
+        <include refid="filterConditions" />
         ORDER BY due_date IS NULL ASC,
         <choose>
             <when test="order == 'desc'">
@@ -80,9 +88,16 @@
     <select id="count" resultType="int">
         SELECT COUNT(*)
         FROM todos
-        <where>
-            <include refid="listConditions" />
-        </where>
+        WHERE
+        <choose>
+            <when test="trash">
+                deleted_at IS NOT NULL
+            </when>
+            <otherwise>
+                deleted_at IS NULL
+            </otherwise>
+        </choose>
+        <include refid="filterConditions" />
     </select>
 
     <select id="findById" resultType="com.example.todoapp.Todo">
@@ -95,10 +110,12 @@
             due_date,
             completed,
             completed_at,
+            deleted_at,
             created_at,
             updated_at
         FROM todos
         WHERE id = #{id}
+          AND deleted_at IS NULL
     </select>
 
     <insert id="insert" parameterType="com.example.todoapp.Todo"
@@ -137,10 +154,20 @@
             END,
             completed = COALESCE(#{completed}, false)
         WHERE id = #{id}
+          AND deleted_at IS NULL
     </update>
 
-    <delete id="deleteById">
-        DELETE FROM todos
+    <update id="markDeleted">
+        UPDATE todos
+        SET deleted_at = CURRENT_TIMESTAMP
         WHERE id = #{id}
-    </delete>
+          AND deleted_at IS NULL
+    </update>
+
+    <update id="restore">
+        UPDATE todos
+        SET deleted_at = NULL
+        WHERE id = #{id}
+          AND deleted_at IS NOT NULL
+    </update>
 </mapper>

@@ -34,22 +34,28 @@ public class HomeController {
             @RequestParam(name = "category", defaultValue = "") String category,
             @RequestParam(name = "order", defaultValue = "asc") String order,
             @RequestParam(name = "showCompleted", defaultValue = "false") boolean showCompleted,
+            @RequestParam(name = "trash", defaultValue = "0") String trashValue,
             @RequestParam(name = "page", defaultValue = "1") int page,
             Model model) {
         if (!order.equals("desc")) {
             order = "asc";
         }
 
-        int totalPages = todoService.countPages(keyword, category, showCompleted);
+        boolean trash = trashValue.equals("1");
+        if (trash) {
+            showCompleted = true;
+        }
+        int totalPages = todoService.countPages(keyword, category, showCompleted, trash);
         int currentPage = Math.max(1, Math.min(page, Math.max(totalPages, 1)));
 
         model.addAttribute("todos",
-                todoService.search(keyword, category, order, showCompleted, currentPage));
+                todoService.search(keyword, category, order, showCompleted, trash, currentPage));
         model.addAttribute("today", LocalDate.now());
         model.addAttribute("keyword", keyword);
         model.addAttribute("category", category);
         model.addAttribute("order", order);
         model.addAttribute("showCompleted", showCompleted);
+        model.addAttribute("trash", trash);
         model.addAttribute("currentPage", currentPage);
         model.addAttribute("totalPages", totalPages);
         return "todos";
@@ -124,6 +130,13 @@ public class HomeController {
         todoService.delete(id);
         redirectAttributes.addFlashAttribute("message", "削除しました");
         return "redirect:/todos";
+    }
+
+    @PostMapping("/todos/{id}/restore")
+    public String restore(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        todoService.restore(id);
+        redirectAttributes.addFlashAttribute("message", "戻しました");
+        return "redirect:/todos?trash=1";
     }
 
     @PostMapping("/todos")

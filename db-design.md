@@ -18,7 +18,7 @@
 
 | テーブル名 | 日本語名 | 用途 |
 |---|---|---|
-| `todos` | やること | やること、メモ、ジャンル、優先度、期限、完了状態、登録日時、最終更新日時を保存する。 |
+| `todos` | やること | やること、メモ、ジャンル、優先度、期限、完了状態、削除日時、登録日時、最終更新日時を保存する。 |
 
 ## 4. todos テーブル定義
 
@@ -33,8 +33,9 @@
 | 5 | `priority` | 優先度 | `INT` | 不可 | `2`（中） | `1`（高）、`2`（中）、`3`（低）のいずれか | DR-05、FR-01-01、FR-01-03、FR-02-01、VR-05 |
 | 6 | `due_date` | 期限 | `DATE` | 可 | `NULL`（値なし） | 日付。期限に関する追加の入力制限は設けない | DR-06、FR-01-01、FR-02-01、FR-06-01、FR-06-02 |
 | 7 | `completed` | 完了状態 | `BOOLEAN` | 不可 | `FALSE`（未完了） | `FALSE` / `0`（未完了）、`TRUE` / `1`（完了）のいずれか | DR-07、FR-01-01、FR-01-04、FR-03-01 |
-| 8 | `created_at` | 登録日時 | `DATETIME` | 不可 | 登録時の日時を自動設定 | 利用者は入力しない | DR-08 |
-| 9 | `updated_at` | 最終更新日時 | `DATETIME` | 不可 | 登録時および更新時の日時を自動設定 | 利用者は入力しない | DR-09 |
+| 8 | `deleted_at` | 削除日時 | `DATETIME` | 可 | `NULL`（未削除） | 削除時に日時を入れ、戻すときに空へ戻す | DR-10 |
+| 9 | `created_at` | 登録日時 | `DATETIME` | 不可 | 登録時の日時を自動設定 | 利用者は入力しない | DR-08 |
+| 10 | `updated_at` | 最終更新日時 | `DATETIME` | 不可 | 登録時および更新時の日時を自動設定 | 利用者は入力しない | DR-09 |
 
 ## 5. キー・制約・インデックス
 
@@ -71,6 +72,7 @@
 | DR-07 | 完了状態 | `completed` | 必須、`0` / `1` に制限、既定値 `0` |
 | DR-08 | 登録日時 | `created_at` | 登録時に自動設定 |
 | DR-09 | 最終更新日時 | `updated_at` | 登録時と更新時に自動設定 |
+| DR-10 | 削除日時 | `deleted_at` | 未削除は `NULL`、削除時は現在日時、戻すときは `NULL` |
 | FR-05-01 | 名前の一部一致検索 | `title` | `title` を検索対象にする |
 | FR-05-02 | ジャンルの完全一致検索 | `category` | `category` を検索対象にする |
 | FR-06-01、FR-06-02、FR-06-05 | 期限順の並び替え | `due_date` | `due_date` を並び替えの基準にし、期限が未入力のデータは昇順・降順のどちらでも末尾にする。インデックスを設定する |
@@ -90,6 +92,7 @@ CREATE TABLE todos (
     priority INT NOT NULL DEFAULT 2,
     due_date DATE NULL,
     completed BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,

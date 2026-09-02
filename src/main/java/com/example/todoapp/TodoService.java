@@ -20,13 +20,13 @@ public class TodoService {
     }
 
     public List<Todo> search(String keyword, String category, String order,
-            boolean showCompleted, int page) {
+            boolean showCompleted, boolean trash, int page) {
         int offset = (page - 1) * PAGE_SIZE;
-        return todoMapper.searchPage(keyword, category, order, showCompleted, offset);
+        return todoMapper.searchPage(keyword, category, order, showCompleted, trash, offset);
     }
 
-    public int countPages(String keyword, String category, boolean showCompleted) {
-        int count = todoMapper.count(keyword, category, showCompleted);
+    public int countPages(String keyword, String category, boolean showCompleted, boolean trash) {
+        int count = todoMapper.count(keyword, category, showCompleted, trash);
         return (count + PAGE_SIZE - 1) / PAGE_SIZE;
     }
 
@@ -50,7 +50,12 @@ public class TodoService {
     }
 
     public void delete(Long id) {
-        todoMapper.deleteById(id);
+        todoMapper.markDeleted(id);
         log.info("削除 id={}", id);
+    }
+
+    public void restore(Long id) {
+        todoMapper.restore(id);
+        log.info("復元 id={}", id);
     }
 }
