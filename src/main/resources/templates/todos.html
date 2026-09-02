@@ -42,12 +42,16 @@
             <button class="btn" type="submit">絞り込む</button>
             <a class="link" th:href="@{/todos(keyword=${keyword},category=${category},order='asc',showCompleted=${showCompleted},trash=${trash ? 1 : null},page=${currentPage})}">期限が近い順</a>
             <a class="link" th:href="@{/todos(keyword=${keyword},category=${category},order='desc',showCompleted=${showCompleted},trash=${trash ? 1 : null},page=${currentPage})}">期限が遠い順</a>
+            <a class="btn" download="todos.csv"
+               th:href="@{/api/todos.csv(keyword=${keyword},category=${category},order=${order},showCompleted=${showCompleted},trash=${trash ? 1 : 0})}">CSVで書き出す</a>
         </form>
 
         <table class="todo-table" th:if="${!#lists.isEmpty(todos)}">
             <thead>
                 <tr>
+                    <th th:if="${!trash}">印</th>
                     <th>やること</th>
+                    <th>メモ</th>
                     <th>ジャンル</th>
                     <th>優先度</th>
                     <th>期限</th>
@@ -58,7 +62,20 @@
             <tbody>
                 <tr th:each="todo : ${todos}"
                     th:classappend="${todo.dueDate != null and todo.dueDate.isBefore(today) and todo.completed != true} ? 'overdue'">
+                    <td th:if="${!trash}">
+                        <form th:action="@{/todos/{id}/pin(id=${todo.id})}" method="post">
+                            <input type="hidden" name="keyword" th:value="${keyword}">
+                            <input type="hidden" name="category" th:value="${category}">
+                            <input type="hidden" name="order" th:value="${order}">
+                            <input type="hidden" name="showCompleted" th:value="${showCompleted}">
+                            <input type="hidden" name="page" th:value="${currentPage}">
+                            <button class="btn" type="submit"
+                                    th:text="${todo.pinned} ? '★' : '☆'"
+                                    th:attr="aria-label=${todo.pinned} ? '印を外す' : '印を付ける'"></button>
+                        </form>
+                    </td>
                     <td th:text="${todo.title}"></td>
+                    <td th:text="${todo.detail}"></td>
                     <td th:text="${todo.category}"></td>
                     <td>
                         <span class="priority-mark" th:if="${todo.priority == 1}" aria-label="最優先">★</span>

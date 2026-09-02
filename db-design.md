@@ -18,7 +18,7 @@
 
 | テーブル名 | 日本語名 | 用途 |
 |---|---|---|
-| `todos` | やること | やること、メモ、ジャンル、優先度、期限、完了状態、削除日時、登録日時、最終更新日時を保存する。 |
+| `todos` | やること | やること、メモ、ジャンル、優先度、期限、完了状態、印の有無、削除日時、登録日時、最終更新日時を保存する。 |
 
 ## 4. todos テーブル定義
 
@@ -33,9 +33,10 @@
 | 5 | `priority` | 優先度 | `INT` | 不可 | `2`（中） | `1`（高）、`2`（中）、`3`（低）のいずれか | DR-05、FR-01-01、FR-01-03、FR-02-01、VR-05 |
 | 6 | `due_date` | 期限 | `DATE` | 可 | `NULL`（値なし） | 日付。期限に関する追加の入力制限は設けない | DR-06、FR-01-01、FR-02-01、FR-06-01、FR-06-02 |
 | 7 | `completed` | 完了状態 | `BOOLEAN` | 不可 | `FALSE`（未完了） | `FALSE` / `0`（未完了）、`TRUE` / `1`（完了）のいずれか | DR-07、FR-01-01、FR-01-04、FR-03-01 |
-| 8 | `deleted_at` | 削除日時 | `DATETIME` | 可 | `NULL`（未削除） | 削除時に日時を入れ、戻すときに空へ戻す | DR-10 |
-| 9 | `created_at` | 登録日時 | `DATETIME` | 不可 | 登録時の日時を自動設定 | 利用者は入力しない | DR-08 |
-| 10 | `updated_at` | 最終更新日時 | `DATETIME` | 不可 | 登録時および更新時の日時を自動設定 | 利用者は入力しない | DR-09 |
+| 8 | `pinned` | 印 | `BOOLEAN` | 不可 | `FALSE`（印なし） | `FALSE` / `0`（印なし）、`TRUE` / `1`（印あり）のいずれか | DR-11、FR-06-01、FR-07 |
+| 9 | `deleted_at` | 削除日時 | `DATETIME` | 可 | `NULL`（未削除） | 削除時に日時を入れ、戻すときに空へ戻す | DR-10 |
+| 10 | `created_at` | 登録日時 | `DATETIME` | 不可 | 登録時の日時を自動設定 | 利用者は入力しない | DR-08 |
+| 11 | `updated_at` | 最終更新日時 | `DATETIME` | 不可 | 登録時および更新時の日時を自動設定 | 利用者は入力しない | DR-09 |
 
 ## 5. キー・制約・インデックス
 
@@ -49,15 +50,16 @@
 - `category` は、要件で指定された5種類以外を保存できないようにする。
 - `priority` は、`1`、`2`、`3` 以外を保存できないようにする。
 - `completed` は、`0` または `1` 以外を保存できないようにする。
+- `pinned` は、`0` または `1` 以外を保存できないようにする。
 - 画面側でも同じ入力チェックを行い、利用者に要件で指定されたエラーメッセージを表示する。DBの制約は、不正なデータの保存を最後に防ぐためのものとする。
 
 ### 5.3 インデックス
 
 `due_date` に `idx_todos_due_date` というインデックス（検索や並び替えを速くする目印）を設定する。期限順の並び替え（FR-06-01、FR-06-02）で利用する。
 
-### 5.4 期限順の並び替え
+### 5.4 印と期限順の2段の並び替え
 
-`due_date` が `NULL`（期限未入力）のデータは、期限が近い順と遠い順のどちらでも末尾に並べる。
+1段目は `pinned` で印ありを先に並べ、2段目は `due_date` で選択された期限順に並べる。`due_date` が `NULL`（期限未入力）のデータは、同じ印の有無の中で、期限が近い順と遠い順のどちらでも末尾に並べる。
 
 ## 6. 要件とカラムの対応
 
@@ -73,6 +75,7 @@
 | DR-08 | 登録日時 | `created_at` | 登録時に自動設定 |
 | DR-09 | 最終更新日時 | `updated_at` | 登録時と更新時に自動設定 |
 | DR-10 | 削除日時 | `deleted_at` | 未削除は `NULL`、削除時は現在日時、戻すときは `NULL` |
+| DR-11 | 印の有無 | `pinned` | 必須、`0` / `1` に制限、既定値 `0` |
 | FR-05-01 | 名前の一部一致検索 | `title` | `title` を検索対象にする |
 | FR-05-02 | ジャンルの完全一致検索 | `category` | `category` を検索対象にする |
 | FR-06-01、FR-06-02、FR-06-05 | 期限順の並び替え | `due_date` | `due_date` を並び替えの基準にし、期限が未入力のデータは昇順・降順のどちらでも末尾にする。インデックスを設定する |
@@ -92,6 +95,7 @@ CREATE TABLE todos (
     priority INT NOT NULL DEFAULT 2,
     due_date DATE NULL,
     completed BOOLEAN NOT NULL DEFAULT FALSE,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE,
     deleted_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -112,6 +116,8 @@ CREATE TABLE todos (
         CHECK (priority IN (1, 2, 3)),
     CONSTRAINT chk_todos_completed
         CHECK (completed IN (0, 1)),
+    CONSTRAINT chk_todos_pinned
+        CHECK (pinned IN (0, 1)),
 
     INDEX idx_todos_due_date (due_date)
 ) ENGINE=InnoDB

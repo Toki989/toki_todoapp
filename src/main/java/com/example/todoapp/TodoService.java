@@ -25,6 +25,11 @@ public class TodoService {
         return todoMapper.searchPage(keyword, category, order, showCompleted, trash, offset);
     }
 
+    public List<Todo> searchAll(String keyword, String category, String order,
+            boolean showCompleted, boolean trash) {
+        return todoMapper.searchAll(keyword, category, order, showCompleted, trash);
+    }
+
     public int countPages(String keyword, String category, boolean showCompleted, boolean trash) {
         int count = todoMapper.count(keyword, category, showCompleted, trash);
         return (count + PAGE_SIZE - 1) / PAGE_SIZE;
@@ -47,6 +52,10 @@ public class TodoService {
     public void update(Todo todo) {
         todoMapper.update(todo);
         log.info("編集 id={}", todo.getId());
+    }
+
+    public void togglePinned(Long id) {
+        todoMapper.togglePinned(id);
     }
 
     public void delete(Long id) {

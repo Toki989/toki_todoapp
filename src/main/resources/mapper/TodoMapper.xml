@@ -24,6 +24,7 @@
             priority,
             due_date,
             completed,
+            pinned,
             completed_at,
             deleted_at,
             created_at,
@@ -37,7 +38,8 @@
             <if test="to != null">
                 AND due_date &lt;= #{to}
             </if>
-        ORDER BY due_date IS NULL ASC,
+        ORDER BY pinned DESC,
+        due_date IS NULL ASC,
         <choose>
             <when test="order == 'desc'">
                 due_date DESC
@@ -57,6 +59,7 @@
             priority,
             due_date,
             completed,
+            pinned,
             completed_at,
             deleted_at,
             created_at,
@@ -72,7 +75,8 @@
             </otherwise>
         </choose>
         <include refid="filterConditions" />
-        ORDER BY due_date IS NULL ASC,
+        ORDER BY pinned DESC,
+        due_date IS NULL ASC,
         <choose>
             <when test="order == 'desc'">
                 due_date DESC
@@ -83,6 +87,44 @@
         </choose>,
         id ASC
         LIMIT 10 OFFSET #{offset}
+    </select>
+
+    <select id="searchAll" resultType="com.example.todoapp.Todo">
+        SELECT
+            id,
+            title,
+            detail,
+            category,
+            priority,
+            due_date,
+            completed,
+            pinned,
+            completed_at,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM todos
+        WHERE
+        <choose>
+            <when test="trash">
+                deleted_at IS NOT NULL
+            </when>
+            <otherwise>
+                deleted_at IS NULL
+            </otherwise>
+        </choose>
+        <include refid="filterConditions" />
+        ORDER BY pinned DESC,
+        due_date IS NULL ASC,
+        <choose>
+            <when test="order == 'desc'">
+                due_date DESC
+            </when>
+            <otherwise>
+                due_date ASC
+            </otherwise>
+        </choose>,
+        id ASC
     </select>
 
     <select id="count" resultType="int">
@@ -109,6 +151,7 @@
             priority,
             due_date,
             completed,
+            pinned,
             completed_at,
             deleted_at,
             created_at,
@@ -153,6 +196,13 @@
                 ELSE completed_at
             END,
             completed = COALESCE(#{completed}, false)
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+
+    <update id="togglePinned">
+        UPDATE todos
+        SET pinned = NOT pinned
         WHERE id = #{id}
           AND deleted_at IS NULL
     </update>

@@ -6,6 +6,7 @@ CREATE TABLE todos (
     priority INT NOT NULL DEFAULT 2,
     due_date DATE NULL,
     completed BOOLEAN NOT NULL DEFAULT FALSE,
+    pinned BOOLEAN NOT NULL DEFAULT FALSE,
     completed_at DATETIME NULL,
     deleted_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -27,6 +28,8 @@ CREATE TABLE todos (
         CHECK (priority IN (1, 2, 3)),
     CONSTRAINT chk_todos_completed
         CHECK (completed IN (0, 1)),
+    CONSTRAINT chk_todos_pinned
+        CHECK (pinned IN (0, 1)),
 
     INDEX idx_todos_due_date (due_date)
 ) ENGINE=InnoDB
