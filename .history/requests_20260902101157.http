@@ -73,36 +73,3 @@ Content-Type: application/json
 
 ### 8. MCPの窓口を確かめる
 POST http://localhost:8080/mcp
-
-### 9. 窓口と会話を始める
-POST http://localhost:8080/mcp
-Content-Type: application/json
-Accept: application/json, text/event-stream
-
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "initialize",
-  "params": {
-    "protocolVersion": "2025-06-18",
-    "capabilities": {},
-    "clientInfo": { "name": "requests.http", "version": "1.0" }
-  }
-}
-
-### 11. 道具の一覧をもらう
-POST http://localhost:8080/mcp
-Content-Type: application/json
-Accept: application/json, text/event-stream
-Mcp-Session-Id: 85fc19a3-1b12-4656-9fbe-c82fb64f1603
-
-{ "jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {} }
-
-### 9. 道具を1つ呼んでみる
-POST http://localhost:8080/mcp
-Content-Type: application/json
-Accept: application/json, text/event-stream
-Mcp-Session-Id: ここに12-5の手順4で返ってきた番号を書き写す
-
-{ "jsonrpc": "2.0", "id": 3, "method": "tools/call",
-  "params": { "name": "list_todos", "arguments": {} } }
