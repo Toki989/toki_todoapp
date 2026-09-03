@@ -13,6 +13,7 @@
         <p class="flash" th:if="${message != null}" th:text="${message}"></p>
 
         <p th:if="${!trash}"><a class="link" href="/todos/new">新規登録</a></p>
+        <p th:if="${!trash}"><a class="link" href="/todo-templates">テンプレート一覧</a></p>
         <p><a class="link" th:href="${trash} ? '/todos' : '/todos?trash=1'"
               th:text="${trash} ? '一覧に戻る' : '消したものを見る'"></a></p>
 

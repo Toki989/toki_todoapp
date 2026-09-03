@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org"><body>
+<div th:fragment="confirmItems(items)" class="template-list">
+ <section class="template-item" th:each="item,status : ${items}"><h2 th:text="|項目 ${status.count}|"></h2>
+  <p><span class="form-label">タイトル</span><span th:text="${item.title}"></span></p>
+  <p><span class="form-label">メモ</span><span th:text="${#strings.isEmpty(item.detail) ? '（入力なし）' : item.detail}"></span></p>
+  <p><span class="form-label">ジャンル</span><span th:text="${item.category}"></span></p>
+  <p><span class="form-label">優先度</span><span th:text="${item.priority == 1 ? '高' : (item.priority == 2 ? '中' : '低')}"></span></p>
+  <p><span class="form-label">期限</span><span th:text="${item.dueDate == null ? '（入力なし）' : item.dueDate}"></span></p>
+ </section>
+</div></body></html>

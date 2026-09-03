@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テンプレート編集</title><link rel="stylesheet" href="/css/style.css"><script defer src="/js/todo-template-form.js"></script></head>
+<body><div class="container"><h1 class="page-title">テンプレート編集</h1>
+<form class="template-form" th:action="@{/todo-templates/{id}/confirm(id=${templateId})}" method="post" th:object="${todoTemplateForm}">
+  <div class="form-row"><label class="form-label" for="name">テンプレート名</label><input class="form-input" id="name" type="text" th:field="*{name}"><p class="error" th:errors="*{name}"></p></div>
+  <p class="error" th:if="${#fields.hasErrors('items')}" th:errors="*{items}"></p>
+  <div class="template-items" data-template-items>
+    <fieldset class="template-item" th:each="item,status : *{items}" data-template-item>
+      <legend th:text="|項目 ${status.count}|"></legend>
+      <div class="form-row"><label class="form-label">タイトル</label><input class="form-input" type="text" th:field="*{items[__${status.index}__].title}"><p class="error" th:errors="*{items[__${status.index}__].title}"></p></div>
+      <div class="form-row"><label class="form-label">メモ</label><input class="form-input" type="text" th:field="*{items[__${status.index}__].detail}"><p class="error" th:errors="*{items[__${status.index}__].detail}"></p></div>
+      <div class="form-row"><label class="form-label">ジャンル</label><select class="form-input" th:field="*{items[__${status.index}__].category}"><option value=""></option><option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option></select><p class="error" th:errors="*{items[__${status.index}__].category}"></p></div>
+      <div class="form-row"><label class="form-label">優先度</label><select class="form-input" th:field="*{items[__${status.index}__].priority}"><option value=""></option><option value="1">高</option><option value="2">中</option><option value="3">低</option></select><p class="error" th:errors="*{items[__${status.index}__].priority}"></p></div>
+      <div class="form-row"><label class="form-label">期限</label><input class="form-input" type="date" th:field="*{items[__${status.index}__].dueDate}"></div>
+      <button class="btn sub" type="button" data-remove-item>項目を削除</button>
+    </fieldset>
+  </div>
+  <div class="template-actions"><button class="btn sub" type="button" data-add-item>項目を追加</button><button class="btn" type="submit">確認する</button><a class="btn sub" href="/todo-templates">一覧へ</a></div>
+</form></div></body></html>

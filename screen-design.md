@@ -379,3 +379,22 @@
 | SC-05 編集の確認 | FR-03-04～FR-03-06、ER-01、ER-02、SR-05 |
 | SC-06 削除確認 | FR-04-01～FR-04-04、ER-01、ER-02、SR-06 |
 | 6画面共通 | DR-01～DR-09、NFR-04～NFR-09 |
+
+## 7. テンプレート画面
+
+全画面で `container`、`page-title`、`btn`、`btn sub`、`link` を既存用途どおり使い、一覧・項目表示には `template-list`、`template-card`、`template-item`、`item-meta`、操作群には `template-actions` を使う。入力には `form-row`、`form-label`、`form-input`、`error`、確認には `confirm-value`、`confirm-actions` を使う。
+
+| 画面 | URL・メソッド | 表示・入力 | 操作・遷移 |
+|---|---|---|---|
+| SC-08 テンプレート一覧 | `GET /todo-templates` | 名前、項目数、全項目。0件時「テンプレートはまだ登録されていません」。通知を表示 | 新規登録、編集、削除、適用、`/todos` |
+| SC-09 テンプレート登録 | `GET /todo-templates/new` | 名前と1件以上の項目（タイトル、メモ、ジャンル、優先度、期限） | 項目追加・削除、確認、一覧へ |
+| SC-10 登録確認 | `POST /todo-templates/confirm` | 入力欄でなく全文字表示。空のメモ・期限は「（入力なし）」 | `POST /todo-templates` で登録、`POST /todo-templates/new` で書き直し |
+| SC-11 テンプレート編集 | `GET /todo-templates/{id}/edit` | 保存済みの名前と全項目を入力欄に表示 | 項目追加・削除、確認、一覧へ |
+| SC-12 編集確認 | `POST /todo-templates/{id}/confirm` | SC-10と同形式 | `POST /todo-templates/{id}` で保存、`POST /todo-templates/{id}/edit` で書き直し |
+| SC-13 削除確認 | `GET /todo-templates/{id}/delete` | 名前と全項目を読み取り専用表示 | `POST /todo-templates/{id}/delete` で削除、一覧へ戻る |
+| SC-14 適用 | `GET /todo-templates/{id}/apply` | 作成対象の全項目を読み取り専用表示 | `POST /todo-templates/{id}/apply/confirm` で確認、一覧へ戻る |
+| SC-15 適用確認 | `POST /todo-templates/{id}/apply/confirm` | 作成予定の全ToDoを読み取り専用表示 | `POST /todo-templates/{id}/apply` で一括作成、適用へ戻る |
+
+登録・編集では、名前必須・255文字以内・空白だけ不可、項目1件以上、各タイトル必須・255文字以内・空白だけ不可、メモ255文字以内、ジャンルは5種類、優先度1～3、期限任意をサーバー側で検証する。JavaScriptは項目の追加・削除・連番化だけを補助し、最低1項目を画面上で維持する。確認画面のhidden値も最終POSTで再検証する。
+
+編集・削除・適用関連の各段階でIDが存在しない場合は「見つかりませんでした」をフラッシュ表示して一覧へ戻す。成功通知は「テンプレートを登録しました」「テンプレートを保存しました」「テンプレートを削除しました」「N件のToDoを作成しました」。既存 `/todos` に「テンプレート一覧」、テンプレート一覧に「やること一覧へ」の相互導線を置く。

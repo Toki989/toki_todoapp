@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.todoapp.TodoTemplateMapper">
+    <select id="findAll" resultType="com.example.todoapp.TodoTemplate">
+        SELECT id, name, created_at, updated_at
+        FROM todo_templates
+        ORDER BY id ASC
+    </select>
+
+    <select id="findById" resultType="com.example.todoapp.TodoTemplate">
+        SELECT id, name, created_at, updated_at
+        FROM todo_templates
+        WHERE id = #{id}
+    </select>
+
+    <select id="findItemsByTemplateId" resultType="com.example.todoapp.TodoTemplateItem">
+        SELECT id, todo_template_id, title, detail, category, priority,
+               due_date, display_order, created_at, updated_at
+        FROM todo_template_items
+        WHERE todo_template_id = #{todoTemplateId}
+        ORDER BY display_order ASC
+    </select>
+
+    <insert id="insertTemplate" parameterType="com.example.todoapp.TodoTemplate"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO todo_templates (name) VALUES (#{name})
+    </insert>
+
+    <insert id="insertItem" parameterType="com.example.todoapp.TodoTemplateItem"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO todo_template_items
+            (todo_template_id, title, detail, category, priority, due_date, display_order)
+        VALUES
+            (#{todoTemplateId}, #{title}, #{detail}, #{category}, #{priority}, #{dueDate}, #{displayOrder})
+    </insert>
+
+    <update id="updateTemplate" parameterType="com.example.todoapp.TodoTemplate">
+        UPDATE todo_templates SET name = #{name} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteItemsByTemplateId">
+        DELETE FROM todo_template_items WHERE todo_template_id = #{todoTemplateId}
+    </delete>
+
+    <delete id="deleteTemplate">
+        DELETE FROM todo_templates WHERE id = #{id}
+    </delete>
+</mapper>

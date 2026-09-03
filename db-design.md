@@ -9,7 +9,7 @@
 ## 2. 設計の前提
 
 - DBMS（DBを管理するソフトウェア）は MySQL 8.0 を使用する。
-- 使用するテーブル（データを表形式で保存する場所）は `todos` の1つだけとする。
+- 使用するテーブルは `todos`、`todo_templates`、`todo_template_items` の3つとする。
 - `todos` の1行を、1件の「やること」として扱う。
 - 文字コードは `utf8mb4` とし、日本語を保存できるようにする。
 - `id`、`created_at`、`updated_at` は利用者が入力せず、MySQLが自動で設定する。
@@ -19,6 +19,8 @@
 | テーブル名 | 日本語名 | 用途 |
 |---|---|---|
 | `todos` | やること | やること、メモ、ジャンル、優先度、期限、完了状態、印の有無、削除日時、登録日時、最終更新日時を保存する。 |
+| `todo_templates` | テンプレート | テンプレート名を保存する。 |
+| `todo_template_items` | テンプレート項目 | テンプレートに属するToDoのひな型を表示順付きで保存する。 |
 
 ## 4. todos テーブル定義
 
@@ -126,6 +128,57 @@ CREATE TABLE todos (
 ```
 
 ## 8. 補足
+
+## 9. テンプレートテーブル
+
+`todo_templates` 1件に対し `todo_template_items` は複数件所属する。`todo_template_items.todo_template_id` が親IDを参照し、親の物理削除時は `ON DELETE CASCADE` で項目も削除する。`todos` とテンプレート間には外部キーを設けない。適用時に値をコピーした後のToDoを独立させ、テンプレートの編集・削除が過去のToDoへ波及しないためである。
+
+### 9.1 todo_templates
+
+| カラム | 型 | NULL | 既定値・制約 |
+|---|---|---|---|
+| `id` | `BIGINT` | 不可 | `AUTO_INCREMENT`、主キー |
+| `name` | `VARCHAR(255)` | 不可 | 空文字・半角/全角空白だけをCHECKで禁止 |
+| `created_at` | `DATETIME` | 不可 | `CURRENT_TIMESTAMP` |
+| `updated_at` | `DATETIME` | 不可 | `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` |
+
+### 9.2 todo_template_items
+
+| カラム | 型 | NULL | 既定値・制約 |
+|---|---|---|---|
+| `id` | `BIGINT` | 不可 | `AUTO_INCREMENT`、主キー |
+| `todo_template_id` | `BIGINT` | 不可 | `todo_templates(id)` への外部キー、`ON DELETE CASCADE` |
+| `title` | `VARCHAR(255)` | 不可 | 空文字・半角/全角空白だけをCHECKで禁止 |
+| `detail` | `VARCHAR(255)` | 可 | `NULL` |
+| `category` | `VARCHAR(255)` | 不可 | デザイン、マーケティング、プログラミング、資格、就職活動のいずれか |
+| `priority` | `INT` | 不可 | 既定値2、1～3 |
+| `due_date` | `DATE` | 可 | 絶対日付、`NULL` |
+| `display_order` | `INT` | 不可 | 1以上、親内で一意 |
+| `created_at` | `DATETIME` | 不可 | `CURRENT_TIMESTAMP` |
+| `updated_at` | `DATETIME` | 不可 | `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` |
+
+`UNIQUE (todo_template_id, display_order)` と、表示順取得用の `INDEX idx_todo_template_items_template_order (todo_template_id, display_order)` を設ける（MySQLでは一意制約自体も索引になるが、要件をDDL上で明示する）。
+
+## 10. 適用時のコピーとトランザクション
+
+| テンプレート項目 | todos | 適用時の値 |
+|---|---|---|
+| `title` | `title` | そのままコピー |
+| `detail` | `detail` | そのままコピー |
+| `category` | `category` | そのままコピー |
+| `priority` | `priority` | そのままコピー |
+| `due_date` | `due_date` | 絶対日付のままコピー |
+| なし | `completed` | `FALSE` |
+| なし | `pinned` | DB既定値 `FALSE`（モデル上もfalse） |
+| なし | `completed_at`, `deleted_at` | DB既定値 `NULL` |
+
+テンプレートの親子登録、親子更新（親更新・旧項目削除・表示順で再登録）、削除、全項目適用をそれぞれ1トランザクションとする。途中例外はSpringにより全体をロールバックする。DDLは暗黙コミットされるため、データ処理と混在させない。
+
+## 11. DDLの適用
+
+- 新規環境: Docker初期化時に `initdb/01_create_table.sql`、`initdb/02_create_todo_templates.sql` のファイル名順で実行する。
+- 既存DB: バックアップ後、対象2テーブルが存在しないことを確認し、`migration/01_add_todo_templates.sql` を1回だけ実行する。このDDLは `todos` および既存データに触れない。
+- 再実行方針: `IF NOT EXISTS` は不整合な既存定義を見逃すため使用しない。再実行するとテーブル存在エラーで停止する。既に適用済みなら再実行せず、`SHOW CREATE TABLE` で本書・DDLとの一致を確認する。
 
 - `BOOLEAN` は、MySQLでは実際には `0` または `1` を保存する形式として扱われる。
 - `CURRENT_TIMESTAMP` は、SQL実行時の現在日時を自動で入れる指定である。

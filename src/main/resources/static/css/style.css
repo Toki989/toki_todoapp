@@ -223,6 +223,47 @@ body {
     vertical-align: top;
 }
 
+.template-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.template-list {
+    display: grid;
+    gap: 16px;
+}
+
+.template-card,
+.template-item {
+    border: 1px solid #64748b;
+    border-radius: 8px;
+    padding: 16px;
+    background: #111827;
+}
+
+.template-card h2,
+.template-item h2 {
+    margin-top: 0;
+}
+
+.template-item legend {
+    padding: 0 6px;
+    font-weight: bold;
+}
+
+.item-meta {
+    display: block;
+    color: #cbd5e1;
+    font-size: 14px;
+}
+
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
 .calendar-day {
     display: block;
     font-weight: bold;

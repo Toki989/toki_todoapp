@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テンプレート一覧</title><link rel="stylesheet" href="/css/style.css"></head>
+<body><div class="container">
+<h1 class="page-title">テンプレート一覧</h1>
+<p class="flash" th:if="${message != null}" th:text="${message}"></p>
+<div class="template-actions"><a class="btn" href="/todo-templates/new">新規登録</a><a class="btn sub" href="/todos">やること一覧へ</a></div>
+<div class="template-list" th:if="${!#lists.isEmpty(templates)}">
+  <section class="template-card" th:each="template : ${templates}">
+    <h2 th:text="${template.name}"></h2>
+    <p th:text="|項目数: ${#lists.size(template.items)}件|"></p>
+    <ol><li th:each="item : ${template.items}">
+      <span th:text="${item.title}"></span>
+      <span class="item-meta" th:text="|${item.category} / ${item.priority == 1 ? '高' : (item.priority == 2 ? '中' : '低')} / ${item.dueDate == null ? '期限なし' : item.dueDate}|"></span>
+    </li></ol>
+    <div class="template-actions">
+      <a class="link" th:href="@{/todo-templates/{id}/edit(id=${template.id})}">編集</a>
+      <a class="link" th:href="@{/todo-templates/{id}/delete(id=${template.id})}">削除</a>
+      <a class="link" th:href="@{/todo-templates/{id}/apply(id=${template.id})}">適用</a>
+    </div>
+  </section>
+</div>
+<p th:if="${#lists.isEmpty(templates)}">テンプレートはまだ登録されていません</p>
+</div></body></html>
