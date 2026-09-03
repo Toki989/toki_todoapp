@@ -177,9 +177,9 @@ body {
 .holiday-swatch {
     width: 18px;
     height: 18px;
-    border: 1px solid #f87171;
-    border-left: 4px solid #f87171;
-    background: #451a1a;
+    border: 1px solid #94a3b8;
+    border-left: 4px solid #fbbf24;
+    background: #111827;
 }
 
 .calendar-status {
@@ -219,6 +219,7 @@ body {
 
 .calendar-table td {
     height: 96px;
+    background: #111827;
     vertical-align: top;
 }
 
@@ -227,14 +228,38 @@ body {
     font-weight: bold;
 }
 
-.calendar-table th:first-child,
-.calendar-table td:first-child {
+.calendar-weather {
+    margin-top: 4px;
+    border-radius: 4px;
+    padding: 2px 4px;
+    background: #1e293b;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.calendar-table th:first-child {
     color: #fca5a5;
 }
 
-.calendar-table th:last-child,
-.calendar-table td:last-child {
+.calendar-table th:last-child {
     color: #93c5fd;
+}
+
+.calendar-table td.calendar-saturday .calendar-day {
+    color: #93c5fd;
+}
+
+.calendar-table td.calendar-sunday .calendar-day {
+    color: #fca5a5;
+}
+
+.calendar-todo {
+    color: #e2e8f0;
+}
+
+.calendar-todo-overdue {
+    color: #f87171;
 }
 
 .calendar-empty {
@@ -242,17 +267,11 @@ body {
 }
 
 .calendar-table td.calendar-holiday {
-    border-left: 5px solid #f87171;
-    background: #451a1a;
-    color: #fecaca;
+    border-left: 5px solid #fbbf24;
 }
 
-.holiday-name {
-    display: block;
-    margin-top: 6px;
-    font-size: 13px;
-    font-weight: bold;
-    line-height: 1.4;
+.calendar-table td.calendar-holiday .calendar-day {
+    color: #fbbf24;
 }
 
 @media (max-width: 600px) {

@@ -51,12 +51,25 @@
             const todoCalendar = document.querySelector('.calendar-table');
             const from = todoCalendar.dataset.from;
             const to = todoCalendar.dataset.to;
-            const [todoResponse, holidayResponse] = await Promise.all([
+            const emptyWeather = { daily: { time: [] } };
+            const [todoResponse, holidayResponse, weatherResult] = await Promise.all([
                 fetch(`/api/todos?from=${from}&to=${to}`),
-                fetch(`/api/holidays?from=${from}&to=${to}`)
+                fetch(`/api/holidays?from=${from}&to=${to}`),
+                fetch('/api/weather')
+                    .then(response => response.ok
+                        ? response.json().then(weather => ({ weather, unavailable: response.headers.has('X-Weather-Unavailable') }))
+                        : { weather: emptyWeather, unavailable: true })
+                    .catch(() => ({ weather: emptyWeather, unavailable: true }))
             ]);
             const todos = await todoResponse.json();
             const holidays = await holidayResponse.json();
+            const weatherDaily = weatherResult.weather.daily ?? emptyWeather.daily;
+            const weatherByDate = new Map((weatherDaily.time ?? []).map((date, index) => [date, {
+                code: weatherDaily.weather_code?.[index],
+                max: weatherDaily.temperature_2m_max?.[index],
+                min: weatherDaily.temperature_2m_min?.[index],
+                precipitation: weatherDaily.precipitation_probability_max?.[index]
+            }]));
             const now = new Date();
             const today = [
                 now.getFullYear(),
@@ -70,14 +83,22 @@
                 const dayOfWeek = new Date(`${date}T00:00:00`).getDay();
 
                 if (dayOfWeek === 6) {
-                    cell.style.backgroundColor = '#eaf4ff';
+                    cell.classList.add('calendar-saturday');
                 } else if (dayOfWeek === 0) {
-                    cell.style.backgroundColor = '#ffecec';
+                    cell.classList.add('calendar-sunday');
                 }
 
                 if (holidays[date] !== undefined) {
-                    cell.style.backgroundColor = '#fff4cc';
+                    cell.classList.add('calendar-holiday');
                     cell.title = holidays[date];
+                }
+
+                const weather = weatherByDate.get(date);
+                if (weather !== undefined) {
+                    const weatherText = document.createElement('div');
+                    weatherText.className = 'calendar-weather';
+                    weatherText.textContent = `${weatherName(weather.code)} ${weather.max}℃ / ${weather.min}℃ 降水${weather.precipitation}%`;
+                    cell.appendChild(weatherText);
                 }
 
                 const todosForDate = todos.filter(todo => todo.dueDate === date);
@@ -86,9 +107,9 @@
                     .forEach(todo => {
                         const todoName = document.createElement('div');
                         todoName.textContent = todo.title;
-                        todoName.style.color = '#334155';
+                        todoName.className = 'calendar-todo';
                         if (todo.dueDate < today && todo.completed !== true) {
-                            todoName.style.color = 'red';
+                            todoName.classList.add('calendar-todo-overdue');
                         }
                         cell.appendChild(todoName);
                     });
@@ -100,9 +121,27 @@
                 }
             });
 
+            const unavailableMessages = [];
             if (holidayResponse.headers.has('X-Holidays-Unavailable')) {
-                document.querySelector('.calendar-status').textContent = '祝日を取れませんでした';
+                unavailableMessages.push('祝日を取れませんでした');
             }
+            if (weatherResult.unavailable) {
+                unavailableMessages.push('天気を取れませんでした');
+            }
+            document.querySelector('.calendar-status').textContent = unavailableMessages.join(' ');
+        }
+
+        function weatherName(code) {
+            if (code === 0) return '晴れ';
+            if (code <= 3) return 'くもり';
+            if (code === 45 || code === 48) return '霧';
+            if (code <= 57) return '霧雨';
+            if (code <= 67) return '雨';
+            if (code <= 77) return '雪';
+            if (code <= 82) return 'にわか雨';
+            if (code <= 86) return 'にわか雪';
+            if (code >= 95) return '雷雨';
+            return '天気不明';
         }
 
         showTodosOnCalendar();
